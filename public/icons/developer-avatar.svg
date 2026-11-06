@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="avatarBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="faceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Circle with Neon Border -->
+  <circle cx="100" cy="100" r="96" fill="url(#avatarBg)"/>
+  <circle cx="100" cy="100" r="92" stroke="#ffffff" stroke-opacity="0.3" stroke-width="4"/>
+  
+  <!-- Shoulders / Jacket -->
+  <path d="M40 180 C40 145 65 130 100 130 C135 130 160 145 160 180 Z" fill="#0f172a"/>
+  <!-- Hoodie / Shirt Inner -->
+  <path d="M75 180 L100 145 L125 180 Z" fill="#6366f1"/>
+
+  <!-- Neck -->
+  <rect x="88" y="112" width="24" height="25" rx="6" fill="url(#faceGrad)"/>
+
+  <!-- Head / Face -->
+  <ellipse cx="100" cy="85" rx="36" ry="42" fill="url(#faceGrad)"/>
+
+  <!-- Hair -->
+  <path d="M60 80 C60 45 75 35 100 35 C125 35 140 45 140 80 C132 65 125 60 115 62 C105 64 95 58 85 62 C75 66 68 70 60 80 Z" fill="url(#hairGrad)"/>
+
+  <!-- Stylish Glasses -->
+  <rect x="70" y="76" width="24" height="16" rx="4" fill="#0f172a" stroke="#06b6d4" stroke-width="2.5"/>
+  <rect x="106" y="76" width="24" height="16" rx="4" fill="#0f172a" stroke="#06b6d4" stroke-width="2.5"/>
+  <line x1="94" y1="84" x2="106" y2="84" stroke="#06b6d4" stroke-width="3"/>
+  <path d="M72 80 L80 88" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M108 80 L116 88" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Smile -->
+  <path d="M92 108 Q100 114 108 108" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Glowing Headphone Band -->
+  <path d="M58 85 C55 50 70 30 100 30 C130 30 145 50 142 85" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+  <!-- Ear Cups -->
+  <rect x="52" y="72" width="12" height="26" rx="6" fill="#f59e0b"/>
+  <rect x="136" y="72" width="12" height="26" rx="6" fill="#f59e0b"/>
+</svg>

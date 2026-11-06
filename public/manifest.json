@@ -1,0 +1,18 @@
+{
+  "name": "FlashDrop - High Speed File Sharing",
+  "short_name": "FlashDrop",
+  "description": "Ultra-fast peer-to-peer local Wi-Fi file transfer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

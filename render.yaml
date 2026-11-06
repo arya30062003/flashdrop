@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: flashdrop
+    env: node
+    plan: free
+    buildCommand: ""
+    startCommand: "node server.js"
+    healthCheckPath: "/api/info"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000

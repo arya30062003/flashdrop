@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#grad)" />
+  <!-- Two overlapping device silhouettes / files with a lightning bolt -->
+  <rect x="120" y="160" width="180" height="240" rx="24" fill="#ffffff" fill-opacity="0.2" />
+  <rect x="210" y="110" width="180" height="240" rx="24" fill="#ffffff" fill-opacity="0.35" />
+  <!-- Fast Lightning Arrow in Center -->
+  <path d="M290 80 L180 270 L260 270 L220 440 L350 230 L270 230 Z" fill="url(#boltGrad)" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" />
+</svg>

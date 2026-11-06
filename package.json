@@ -1,0 +1,20 @@
+{
+  "name": "flashdrop",
+  "version": "1.0.0",
+  "description": "Ultra-fast peer-to-peer local Wi-Fi file transfer application for mobile and desktop",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "file-transfer",
+    "wifi-direct",
+    "p2p",
+    "shareit-alternative",
+    "high-speed",
+    "pwa"
+  ],
+  "author": "FlashDrop Team",
+  "license": "MIT"
+}

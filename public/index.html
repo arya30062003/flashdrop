@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FlashDrop - Ultra-Fast File Transfer</title>
+  
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/icons/icon.svg">
+
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- ======================================================== -->
+  <!-- 1. ANIMATED APP SPLASH SCREEN                            -->
+  <!-- ======================================================== -->
+  <div id="splashScreen" class="splash-screen">
+    <div class="splash-glow"></div>
+    <div class="splash-content">
+      <div class="splash-logo-wrapper">
+        <div class="splash-logo-pulse"></div>
+        <div class="splash-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
+      <h1 class="splash-title">FlashDrop</h1>
+      <p class="splash-tagline">Extreme-Speed Local P2P Sharing</p>
+      
+      <div class="splash-loader-track">
+        <div class="splash-loader-bar"></div>
+      </div>
+      
+      <div class="splash-footer">
+        <span>⚡ Initializing P2P streaming engine...</span>
+        <span class="splash-author">Developed by Kewte</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Background Ambient Glow -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- Header -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">FlashDrop</h1>
+        <span class="brand-tagline">Extreme-Speed Local P2P</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Creator Portfolio Trigger Pill -->
+      <button id="navProfileBtn" class="nav-profile-pill" title="View Developer Portfolio">
+        <img id="navAvatar" src="/icons/developer-avatar.svg" alt="Developer Avatar" class="nav-avatar-img">
+        <span id="navDevName" class="nav-dev-name">Kewte</span>
+      </button>
+
+      <button id="qrBtn" class="btn-icon" title="View Pairing QR Code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <path d="M14 14h3v3h-3z"/>
+          <path d="M20 14v3"/>
+          <path d="M17 20h4"/>
+          <path d="M14 19v2"/>
+        </svg>
+        <span class="btn-text">Connect Device</span>
+      </button>
+
+      <button id="scanBtn" class="btn-icon" title="Scan QR Code with Camera">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 8V5a1 1 0 0 1 1-1h3"/>
+          <path d="M16 4h3a1 1 0 0 1 1 1v3"/>
+          <path d="M4 16v3a1 1 0 0 0 1 1h3"/>
+          <path d="M16 20h3a1 1 0 0 0 1-1v-3"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="btn-text">Scan</span>
+      </button>
+
+      <div id="connectionPill" class="status-pill online">
+        <span class="pulse-dot"></span>
+        <span id="networkName">Local Wi-Fi</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- PWA Install Prompt Banner -->
+  <div id="pwaBanner" class="pwa-banner hidden">
+    <div class="pwa-content">
+      <img src="/icons/icon.svg" alt="FlashDrop" class="pwa-icon">
+      <div class="pwa-text">
+        <strong>Install FlashDrop App</strong>
+        <span>Add to Home Screen for fullscreen extreme transfers</span>
+      </div>
+    </div>
+    <div class="pwa-actions">
+      <button id="pwaInstallBtn" class="btn btn-sm btn-primary">Install</button>
+      <button id="pwaDismissBtn" class="btn btn-sm btn-ghost">&times;</button>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- Active Speedometer & High-Speed Live Transfer HUD -->
+    <section id="transferHud" class="transfer-hud hidden">
+      <div class="hud-header">
+        <div class="hud-file-info">
+          <div class="hud-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div>
+            <div id="hudFileName" class="hud-name">streaming_large_video.mp4</div>
+            <div id="hudFileSize" class="hud-sub">0 MB / 0 MB</div>
+          </div>
+        </div>
+        <div class="speed-dial">
+          <span id="hudSpeed" class="speed-value">0.0</span>
+          <span class="speed-unit">MB/s</span>
+        </div>
+      </div>
+
+      <!-- Animated High-Speed Progress Bar -->
+      <div class="progress-track">
+        <div id="hudProgressBar" class="progress-fill" style="width: 0%;">
+          <div class="progress-laser"></div>
+        </div>
+      </div>
+
+      <div class="hud-footer">
+        <span id="hudPercent">0%</span>
+        <span id="hudEta">Calculating ETA...</span>
+      </div>
+    </section>
+
+    <!-- Tabs: Send / Received Files / Developer Portfolio -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+        Send Files
+      </button>
+      <button class="tab-btn" data-tab="received">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M19 12l-7 7-7-7"/>
+        </svg>
+        Received Files (<span id="receivedCount">0</span>)
+      </button>
+      <button class="tab-btn" data-tab="portfolio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Developer Portfolio
+      </button>
+    </div>
+
+    <!-- TAB 1: SEND FILES -->
+    <section id="tabSend" class="tab-pane active">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" multiple class="file-input">
+        
+        <div class="dropzone-content">
+          <div class="drop-icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="pulse-icon">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <h3>Tap to Select Files or Drop Here</h3>
+          <p>Any file size: 4K Videos, Photos, Audio, APKs, ISOs, Documents</p>
+          <div class="specs-badge">
+            ⚡ Direct Stream Piping (No Cloud Intermediary)
+          </div>
+        </div>
+      </div>
+
+      <!-- Queue List -->
+      <div id="queueCard" class="card hidden">
+        <div class="card-header">
+          <h4>Transfer Queue</h4>
+          <span id="queueStats">0 files</span>
+        </div>
+        <div id="queueList" class="file-list"></div>
+      </div>
+
+      <!-- Compact Developer Portfolio Spotlight on Home Screen -->
+      <div class="portfolio-spotlight card">
+        <div class="spotlight-left">
+          <div class="spotlight-avatar-wrap">
+            <img id="spotlightAvatar" src="/icons/developer-avatar.svg" alt="Profile" class="spotlight-avatar">
+            <span class="spotlight-badge" title="Verified Developer">✓</span>
+          </div>
+          <div class="spotlight-info">
+            <div class="spotlight-header">
+              <h4 id="spotlightName">Kewte</h4>
+              <span class="spotlight-role" id="spotlightRole">Full Stack & Systems Developer</span>
+            </div>
+            <p id="spotlightBio" class="spotlight-bio">
+              Creator of FlashDrop. Architect of extreme-throughput P2P networking and cross-platform web systems.
+            </p>
+            <div class="spotlight-skills" id="spotlightSkills">
+              <span class="skill-pill">Node.js</span>
+              <span class="skill-pill">P2P Protocols</span>
+              <span class="skill-pill">PWA</span>
+              <span class="skill-pill">Render Cloud</span>
+            </div>
+          </div>
+        </div>
+        <div class="spotlight-actions">
+          <button id="viewPortfolioTabBtn" class="btn btn-sm btn-ghost">Full Portfolio</button>
+          <button id="editProfileBtn" class="btn btn-sm btn-primary">Edit Profile</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: RECEIVED FILES -->
+    <section id="tabReceived" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h4>Files On This Machine</h4>
+            <span class="card-sub">Saved in <code>received_files/</code></span>
+          </div>
+          <button id="refreshFilesBtn" class="btn btn-sm btn-ghost" title="Refresh files list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6"/>
+              <path d="M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <div id="receivedList" class="file-list empty">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+            </svg>
+            <p>No files received yet</p>
+            <span>Connect a phone or another laptop to start streaming files!</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: DEVELOPER PORTFOLIO (FULL VIEW) -->
+    <section id="tabPortfolio" class="tab-pane">
+      <div class="portfolio-hero card">
+        <div class="portfolio-cover"></div>
+        <div class="portfolio-profile-header">
+          <div class="portfolio-avatar-container">
+            <img id="fullAvatar" src="/icons/developer-avatar.svg" alt="Profile" class="portfolio-full-avatar">
+            <button id="changePhotoBtn" class="avatar-edit-overlay" title="Change Profile Photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </button>
+            <input type="file" id="avatarFileInput" accept="image/*" class="hidden">
+          </div>
+
+          <div class="portfolio-main-meta">
+            <div class="portfolio-name-row">
+              <h2 id="fullProfileName">Kewte</h2>
+              <span class="developer-tag">Author & Lead Engineer</span>
+            </div>
+            <p id="fullProfileTitle" class="portfolio-headline">Full Stack & Systems Developer</p>
+            <p id="fullProfileBio" class="portfolio-bio-text">
+              Creator of FlashDrop. Passionate about building high-throughput network applications, peer-to-peer data protocols, distributed systems, and sleek responsive mobile web experiences.
+            </p>
+          </div>
+        </div>
+
+        <div class="portfolio-details-grid">
+          <div class="detail-block">
+            <h5>Core Technical Skills</h5>
+            <div id="fullSkillsList" class="skills-grid">
+              <span class="skill-tag">⚡ Node.js Core</span>
+              <span class="skill-tag">📡 P2P / Sockets</span>
+              <span class="skill-tag">📱 Progressive Web Apps</span>
+              <span class="skill-tag">🚀 High-Performance I/O</span>
+              <span class="skill-tag">☁️ Render Cloud Deployment</span>
+              <span class="skill-tag">🔒 Data Privacy & Zero-Knowledge</span>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <h5>Connect & Socials</h5>
+            <div class="social-links-grid">
+              <a id="linkGithub" href="https://github.com" target="_blank" rel="noopener noreferrer" class="social-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                GitHub
+              </a>
+              <a id="linkLinkedin" href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                LinkedIn
+              </a>
+              <a id="linkWebsite" href="https://render.com" target="_blank" rel="noopener noreferrer" class="social-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Live Render
+              </a>
+              <a id="linkEmail" href="mailto:developer@example.com" class="social-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Contact
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="portfolio-footer-action">
+          <button id="openFullEditBtn" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Portfolio Details & Photo
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Connect / QR Code Modal -->
+  <dialog id="qrModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Connect Mobile Device</h3>
+        <button id="closeQrModal" class="close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">
+          Scan this QR code with your mobile camera to open FlashDrop on your phone:
+        </p>
+
+        <div class="qr-container">
+          <div id="qrCodeWrapper" class="qr-code"></div>
+        </div>
+
+        <div class="network-select-group">
+          <label for="networkSelect">Available Network Access:</label>
+          <select id="networkSelect" class="form-select"></select>
+        </div>
+
+        <div class="url-copy-box">
+          <input type="text" id="shareUrlInput" readonly>
+          <button id="copyUrlBtn" class="btn btn-sm btn-primary">Copy Link</button>
+        </div>
+
+        <div class="tip-box">
+          <span class="tip-icon">💡</span>
+          <span>Ensure both devices are on the same Wi-Fi or hotspot. When deployed on Render, this QR code opens your public cloud address!</span>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Camera QR Scanner Modal -->
+  <dialog id="scannerModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Scan QR Code</h3>
+        <button id="closeScannerModal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="video-wrapper">
+          <video id="cameraVideo" playsinline></video>
+          <div class="scan-target">
+            <div class="target-corner tl"></div>
+            <div class="target-corner tr"></div>
+            <div class="target-corner bl"></div>
+            <div class="target-corner br"></div>
+            <div class="scan-laser"></div>
+          </div>
+        </div>
+        <p id="scannerStatus" class="scanner-status">Point camera at the QR code on the other screen...</p>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Edit Profile Modal -->
+  <dialog id="editProfileModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Edit Developer Portfolio</h3>
+        <button id="closeEditProfileModal" class="close-btn">&times;</button>
+      </div>
+      <form id="editProfileForm" class="modal-body">
+        <div class="form-group">
+          <label for="inputProfileName">Your Name / Handle</label>
+          <input type="text" id="inputProfileName" class="form-input" required placeholder="e.g. Kewte">
+        </div>
+        <div class="form-group">
+          <label for="inputProfileTitle">Professional Title</label>
+          <input type="text" id="inputProfileTitle" class="form-input" required placeholder="e.g. Full Stack & Systems Developer">
+        </div>
+        <div class="form-group">
+          <label for="inputProfileBio">Short Bio</label>
+          <textarea id="inputProfileBio" class="form-textarea" rows="3" placeholder="Tell users about your experience and projects..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="inputProfileSkills">Skills (comma-separated)</label>
+          <input type="text" id="inputProfileSkills" class="form-input" placeholder="Node.js, P2P Protocols, PWA, Render Cloud">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="inputProfileGithub">GitHub URL</label>
+            <input type="url" id="inputProfileGithub" class="form-input" placeholder="https://github.com/yourhandle">
+          </div>
+          <div class="form-group">
+            <label for="inputProfileLinkedin">LinkedIn URL</label>
+            <input type="url" id="inputProfileLinkedin" class="form-input" placeholder="https://linkedin.com/in/yourhandle">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="inputProfileWebsite">Website / Render URL</label>
+            <input type="url" id="inputProfileWebsite" class="form-input" placeholder="https://your-portfolio.com">
+          </div>
+          <div class="form-group">
+            <label for="inputProfileEmail">Contact Email</label>
+            <input type="email" id="inputProfileEmail" class="form-input" placeholder="you@example.com">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancelEditProfileBtn" class="btn btn-ghost">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Scripts -->
+  <script src="/qrcode.js"></script>
+  <script src="/app.js"></script>
+
+</body>
+</html>
