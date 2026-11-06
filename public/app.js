@@ -30,6 +30,10 @@ const RTC_CONFIG = {
 };
 
 // DOM Elements
+const heroSendBtn = document.getElementById('heroSendBtn');
+const heroReceiveBtn = document.getElementById('heroReceiveBtn');
+let pendingFilesToSend = [];
+
 const splashScreen = document.getElementById('splashScreen');
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -186,6 +190,17 @@ function initSignalingEvents() {
     const peers = JSON.parse(e.data);
     nearbyPeers = peers.filter(p => p.id !== myPeerId);
     renderNearbyPeers();
+
+    // If we have pending files waiting for a receiver, send immediately
+    if (pendingFilesToSend.length > 0 && nearbyPeers.length > 0) {
+      const target = nearbyPeers[0].id;
+      const files = [...pendingFilesToSend];
+      pendingFilesToSend = [];
+      qrModal.close();
+      for (const f of files) {
+        sendFileToPeer(target, f);
+      }
+    }
 
     // Check if URL specified auto-connect peer
     const urlParams = new URLSearchParams(window.location.search);
@@ -505,7 +520,9 @@ function renderNearbyPeers() {
         }
       </div>
       <div class="peer-name" title="${escapeHtml(peer.name)}">${escapeHtml(peer.name)}</div>
-      <span class="peer-status" id="peer-status-${peer.id}">Tap to Send</span>
+      <button class="btn btn-sm btn-primary" style="margin-top:6px;pointer-events:none;">
+        Send File ➔
+      </button>
     </div>
   `).join('');
 }
@@ -515,7 +532,7 @@ window.selectPeer = function(peerId) {
   const peer = nearbyPeers.find(p => p.id === peerId);
   if (peer) {
     dropzoneTitle.textContent = `Send to ${peer.name}`;
-    dropzoneSub.textContent = `Tap here to choose movies, photos, or files to stream directly`;
+    dropzoneSub.textContent = `Choose movies, photos, or files to stream directly`;
     fileInput.click();
   }
 };
@@ -528,6 +545,19 @@ function updatePeerCardStatus(peerId, statusText) {
 // ----------------------------------------------------
 // 7. File Selection / Drag & Drop
 // ----------------------------------------------------
+if (heroSendBtn) {
+  heroSendBtn.addEventListener('click', () => {
+    fileInput.click();
+  });
+}
+
+if (heroReceiveBtn) {
+  heroReceiveBtn.addEventListener('click', () => {
+    initQR();
+    qrModal.showModal();
+  });
+}
+
 fileInput.addEventListener('change', (e) => {
   handleSelectedFiles(e.target.files);
   fileInput.value = '';
@@ -554,8 +584,15 @@ async function handleSelectedFiles(files) {
     selectedPeerId = nearbyPeers[0].id;
   }
 
+  // If no peer connected yet, queue files and pop up QR code to connect receiver
   if (!selectedPeerId) {
-    alert('Please connect another device first (scan QR code on your other phone or open the link)!');
+    pendingFilesToSend = Array.from(files);
+    initQR();
+    qrModal.showModal();
+    const desc = qrModal.querySelector('.modal-desc');
+    if (desc) {
+      desc.innerHTML = `<strong>${files.length} file(s) selected!</strong><br>Scan this QR code with the receiving phone to start transferring immediately:`;
+    }
     return;
   }
 

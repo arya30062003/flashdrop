@@ -532,6 +532,76 @@ body {
 /* ======================================================== */
 /* 2. P2P RADAR & NEARBY DEVICES                            */
 /* ======================================================== */
+
+/* Main Action Cards (SEND / RECEIVE SHAREit Style) */
+.main-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.hero-action-btn {
+  padding: 24px 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+.hero-action-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+}
+.send-btn {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4);
+}
+.send-btn:hover {
+  box-shadow: 0 14px 40px rgba(79, 70, 229, 0.6);
+}
+.receive-btn {
+  background: linear-gradient(135deg, #059669, #0d9488);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.35);
+}
+.receive-btn:hover {
+  box-shadow: 0 14px 40px rgba(16, 185, 129, 0.55);
+}
+.hero-action-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.hero-action-icon svg {
+  width: 28px;
+  height: 28px;
+}
+.hero-action-content {
+  display: flex;
+  flex-direction: column;
+}
+.hero-action-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+.hero-action-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
 .radar-card {
   margin-bottom: 20px;
   overflow: hidden;
