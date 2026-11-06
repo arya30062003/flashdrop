@@ -41,11 +41,8 @@ Deploying FlashDrop to Render allows anyone on the internet to send and receive 
 
 1. **Initialize Git & Push to GitHub:**
    ```bash
-   git init
-   git add .
-   git commit -m "Initial FlashDrop commit with splash screen, portfolio, and render config"
+   git remote add origin https://github.com/arya30062003/flashdrop.git
    git branch -M main
-   git remote add origin https://github.com/<your-username>/flashdrop.git
    git push -u origin main
    ```
 

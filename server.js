@@ -293,14 +293,14 @@ function getUniqueFilename(dir, originalName) {
 
 // Default Developer Portfolio Profile
 const DEFAULT_PROFILE = {
-  name: "Kewte",
+  name: "Arya",
   title: "Full Stack & Systems Developer",
   bio: "Creator of FlashDrop. Passionate about high-speed P2P networking, distributed applications, and modern cross-platform engineering.",
-  photoUrl: "/icons/developer-avatar.svg",
-  skills: ["Node.js", "P2P Protocols", "PWA", "Real-Time Streaming", "Cloud Deployment"],
-  github: "https://github.com",
+  photoUrl: "https://github.com/arya30062003.png",
+  skills: ["Node.js", "P2P Protocols", "PWA", "Real-Time Streaming", "Render Cloud"],
+  github: "https://github.com/arya30062003",
   linkedin: "https://linkedin.com",
-  website: "https://render.com",
+  website: "https://github.com/arya30062003",
   email: "developer@example.com"
 };
 
