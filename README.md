@@ -1,20 +1,26 @@
-# ⚡ FlashDrop — Extreme-Speed Local & Cloud File Transfer
+# ⚡ FlashDrop — True Device-to-Device P2P File Exchange
 
-**FlashDrop** is an ultra-fast, zero-bloat, peer-to-peer file transfer system engineered for seamless sharing between **mobile devices (Android / iOS)** and **laptops/PCs (Windows / Mac / Linux)**.
-
-Features an **animated app splash screen**, a built-in **Creator Portfolio with profile photo customization**, and full support for **Render Cloud deployment**.
+**FlashDrop** is an ultra-fast, zero-bloat, direct peer-to-peer file exchange system. It allows phones (Android / iOS) and computers (Windows / Mac / Linux) to exchange movies, photos, and files directly **without uploading to any cloud server**.
 
 ---
 
-## 🚀 Key Features
+## 🔒 True Peer-to-Peer (WebRTC Direct)
 
-- **⚡ Extreme Transfer Speeds:** Streams raw binary data using 1 MB chunks and `TCP_NODELAY` (no multipart/form-data overhead).
-- **📱 Universal Compatibility:** Works on Android, iPhone, Windows, Mac, and Linux. No app store installation needed!
-- **✨ Animated Splash Screen:** Smooth loading transition with electric glow and brand logo.
-- **👨‍💻 Creator Portfolio on Home Screen:** Includes profile photo, title, bio, skill tags, and social links (customizable directly in the UI).
-- **🌐 Dual Mode:** Works offline over local Wi-Fi / Hotspot or globally when deployed to **Render Cloud**.
-- **📷 Instant QR Code Pairing:** Built-in offline SVG QR generator + in-browser camera QR code reader.
-- **📲 Progressive Web App (PWA):** Installable as a standalone fullscreen app on mobile home screens.
+| Legacy Cloud Transfer | FlashDrop True P2P |
+| :--- | :--- |
+| ❌ Uploads 2GB movie to cloud server | ✅ **0 bytes uploaded to any server** |
+| ❌ Consumes double internet data | ✅ **Uses local Wi-Fi radio directly** |
+| ❌ Limited by cloud storage quota | ✅ **No file size limit** (any movie/photo size) |
+| ❌ Privacy risk (files stored on servers) | ✅ **100% Private direct device stream** |
+
+---
+
+## 🚀 How It Works
+
+1. **Local Radar Discovery:** When you open FlashDrop on two devices (on the same Wi-Fi, hotspot, or room), they appear instantly on each other's radar.
+2. **Direct WebRTC DataChannel:** When you tap a device to send a movie, the file streams directly from Device A's Wi-Fi antenna to Device B's Wi-Fi antenna.
+3. **Instant Auto-Save:** The receiving device saves the file directly as chunks arrive.
+
 
 ---
 

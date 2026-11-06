@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>FlashDrop - Ultra-Fast File Transfer</title>
+  <title>FlashDrop - True P2P Direct File Exchange</title>
   
   <!-- PWA & Mobile Meta Tags -->
   <link rel="manifest" href="/manifest.json">
@@ -32,14 +32,14 @@
         </div>
       </div>
       <h1 class="splash-title">FlashDrop</h1>
-      <p class="splash-tagline">Extreme-Speed Local P2P Sharing</p>
+      <p class="splash-tagline">Direct Device-to-Device P2P Exchange</p>
       
       <div class="splash-loader-track">
         <div class="splash-loader-bar"></div>
       </div>
       
       <div class="splash-footer">
-        <span>⚡ Initializing P2P streaming engine...</span>
+        <span>🔒 Zero Server Uploads • Direct Local Wi-Fi Stream</span>
         <span class="splash-author">Developed by Arya (@arya30062003)</span>
       </div>
     </div>
@@ -59,7 +59,7 @@
       </div>
       <div>
         <h1 class="brand-title">FlashDrop</h1>
-        <span class="brand-tagline">Extreme-Speed Local P2P</span>
+        <span class="brand-tagline">Direct P2P Exchange</span>
       </div>
     </div>
 
@@ -96,23 +96,16 @@
 
       <div id="connectionPill" class="status-pill online">
         <span class="pulse-dot"></span>
-        <span id="networkName">Local Wi-Fi</span>
+        <span id="myDeviceName">My Device</span>
       </div>
     </div>
   </header>
 
-  <!-- PWA Install Prompt Banner -->
-  <div id="pwaBanner" class="pwa-banner hidden">
-    <div class="pwa-content">
-      <img src="/icons/icon.svg" alt="FlashDrop" class="pwa-icon">
-      <div class="pwa-text">
-        <strong>Install FlashDrop App</strong>
-        <span>Add to Home Screen for fullscreen extreme transfers</span>
-      </div>
-    </div>
-    <div class="pwa-actions">
-      <button id="pwaInstallBtn" class="btn btn-sm btn-primary">Install</button>
-      <button id="pwaDismissBtn" class="btn btn-sm btn-ghost">&times;</button>
+  <!-- P2P Zero-Upload Guarantee Banner -->
+  <div class="p2p-badge-strip">
+    <div class="p2p-badge-content">
+      <span class="p2p-shield">🛡️</span>
+      <span><strong>True Device-to-Device Exchange:</strong> Files stream directly between phones and PCs over local Wi-Fi. <strong>0 bytes uploaded to any server.</strong></span>
     </div>
   </div>
 
@@ -128,8 +121,8 @@
             </svg>
           </div>
           <div>
-            <div id="hudFileName" class="hud-name">streaming_large_video.mp4</div>
-            <div id="hudFileSize" class="hud-sub">0 MB / 0 MB</div>
+            <div id="hudFileName" class="hud-name">file_exchange.mp4</div>
+            <div id="hudFileSize" class="hud-sub">0 MB / 0 MB • Direct P2P</div>
           </div>
         </div>
         <div class="speed-dial">
@@ -147,23 +140,27 @@
 
       <div class="hud-footer">
         <span id="hudPercent">0%</span>
-        <span id="hudEta">Calculating ETA...</span>
+        <span id="hudEta">Streaming direct...</span>
       </div>
     </section>
 
-    <!-- Tabs: Send / Received Files / Developer Portfolio -->
+    <!-- Tabs: Radar Exchange / Transferred Files / Developer Portfolio -->
     <div class="tab-bar">
-      <button class="tab-btn active" data-tab="send">
+      <button class="tab-btn active" data-tab="exchange">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 19V5M5 12l7-7 7 7"/>
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+          <path d="M2 12h20"/>
         </svg>
-        Send Files
+        Nearby Devices
       </button>
-      <button class="tab-btn" data-tab="received">
+      <button class="tab-btn" data-tab="history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14M19 12l-7 7-7-7"/>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        Received Files (<span id="receivedCount">0</span>)
+        Received Files (<span id="historyCount">0</span>)
       </button>
       <button class="tab-btn" data-tab="portfolio">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -174,37 +171,66 @@
       </button>
     </div>
 
-    <!-- TAB 1: SEND FILES -->
-    <section id="tabSend" class="tab-pane active">
+    <!-- TAB 1: RADAR / DIRECT DEVICE EXCHANGE -->
+    <section id="tabExchange" class="tab-pane active">
+      <!-- Radar Section -->
+      <div class="radar-card card">
+        <div class="radar-header">
+          <div>
+            <h3>Nearby Devices on Local Wi-Fi</h3>
+            <span class="card-sub">Tap any device to exchange movies, photos, or documents directly</span>
+          </div>
+          <button id="renameDeviceBtn" class="btn btn-sm btn-ghost" title="Change My Device Name">
+            ✏️ Rename Device
+          </button>
+        </div>
+
+        <div class="radar-container">
+          <!-- Animated Radar Rings -->
+          <div class="radar-ring ring-1"></div>
+          <div class="radar-ring ring-2"></div>
+          <div class="radar-ring ring-3"></div>
+
+          <!-- Self Device Center -->
+          <div class="radar-self" id="radarSelfNode">
+            <div class="self-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="selfTypeIcon">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+            </div>
+            <span class="self-label" id="selfDeviceLabel">You (Ready)</span>
+          </div>
+
+          <!-- Nearby Peers Grid / Ring -->
+          <div id="peersContainer" class="peers-grid">
+            <div class="radar-searching">
+              <div class="searching-spinner"></div>
+              <p>Scanning for nearby devices...</p>
+              <span>Connect another phone or laptop to the same Wi-Fi / hotspot or scan the QR code to pair!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Dropzone for Active or Selected Peer -->
       <div class="dropzone" id="dropzone">
         <input type="file" id="fileInput" multiple class="file-input">
-        
         <div class="dropzone-content">
           <div class="drop-icon-wrapper">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="pulse-icon">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/>
             </svg>
           </div>
-          <h3>Tap to Select Files or Drop Here</h3>
-          <p>Any file size: 4K Videos, Photos, Audio, APKs, ISOs, Documents</p>
+          <h3 id="dropzoneTitle">Select Files or Drop Here</h3>
+          <p id="dropzoneSub">Choose movies, photos, or documents to stream directly</p>
           <div class="specs-badge">
-            ⚡ Direct Stream Piping (No Cloud Intermediary)
+            🔒 Direct WebRTC Stream • Zero Server Storage
           </div>
         </div>
       </div>
 
-      <!-- Queue List -->
-      <div id="queueCard" class="card hidden">
-        <div class="card-header">
-          <h4>Transfer Queue</h4>
-          <span id="queueStats">0 files</span>
-        </div>
-        <div id="queueList" class="file-list"></div>
-      </div>
-
-      <!-- Compact Developer Portfolio Spotlight on Home Screen -->
+      <!-- Developer Portfolio Spotlight on Home Screen -->
       <div class="portfolio-spotlight card">
         <div class="spotlight-left">
           <div class="spotlight-avatar-wrap">
@@ -217,12 +243,12 @@
               <span class="spotlight-role" id="spotlightRole">Full Stack & Systems Developer</span>
             </div>
             <p id="spotlightBio" class="spotlight-bio">
-              Creator of FlashDrop. Architect of extreme-throughput P2P networking and cross-platform web systems.
+              Creator of FlashDrop. Architect of true device-to-device P2P streaming and high-speed cross-platform data exchange.
             </p>
             <div class="spotlight-skills" id="spotlightSkills">
-              <span class="skill-pill">Node.js</span>
-              <span class="skill-pill">P2P Protocols</span>
-              <span class="skill-pill">PWA</span>
+              <span class="skill-pill">WebRTC P2P</span>
+              <span class="skill-pill">Direct Wi-Fi</span>
+              <span class="skill-pill">Node.js Core</span>
               <span class="skill-pill">Render Cloud</span>
             </div>
           </div>
@@ -234,32 +260,25 @@
       </div>
     </section>
 
-    <!-- TAB 2: RECEIVED FILES -->
-    <section id="tabReceived" class="tab-pane">
+    <!-- TAB 2: RECEIVED FILES HISTORY -->
+    <section id="tabHistory" class="tab-pane">
       <div class="card">
         <div class="card-header">
           <div>
-            <h4>Files On This Machine</h4>
-            <span class="card-sub">Saved in <code>received_files/</code></span>
+            <h4>Exchanged Files (This Session)</h4>
+            <span class="card-sub">Files received directly from peer devices</span>
           </div>
-          <button id="refreshFilesBtn" class="btn btn-sm btn-ghost" title="Refresh files list">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M23 4v6h-6"/>
-              <path d="M1 20v-6h6"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-            </svg>
-            Refresh
-          </button>
+          <button id="clearHistoryBtn" class="btn btn-sm btn-ghost">Clear List</button>
         </div>
 
-        <div id="receivedList" class="file-list empty">
+        <div id="historyList" class="file-list empty">
           <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
               <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
             </svg>
-            <p>No files received yet</p>
-            <span>Connect a phone or another laptop to start streaming files!</span>
+            <p>No files exchanged yet</p>
+            <span>Tap on a nearby device above to stream movies or photos directly!</span>
           </div>
         </div>
       </div>
@@ -288,7 +307,7 @@
             </div>
             <p id="fullProfileTitle" class="portfolio-headline">Full Stack & Systems Developer</p>
             <p id="fullProfileBio" class="portfolio-bio-text">
-              Creator of FlashDrop. Passionate about building high-throughput network applications, peer-to-peer data protocols, distributed systems, and sleek responsive mobile web experiences.
+              Creator of FlashDrop. Passionate about true peer-to-peer data exchange, WebRTC direct streaming, and high-performance cross-platform networking.
             </p>
           </div>
         </div>
@@ -297,12 +316,12 @@
           <div class="detail-block">
             <h5>Core Technical Skills</h5>
             <div id="fullSkillsList" class="skills-grid">
-              <span class="skill-tag">⚡ Node.js Core</span>
-              <span class="skill-tag">📡 P2P / Sockets</span>
+              <span class="skill-tag">⚡ WebRTC P2P DataChannels</span>
+              <span class="skill-tag">📡 Direct Wi-Fi Radio Transfer</span>
               <span class="skill-tag">📱 Progressive Web Apps</span>
-              <span class="skill-tag">🚀 High-Performance I/O</span>
-              <span class="skill-tag">☁️ Render Cloud Deployment</span>
-              <span class="skill-tag">🔒 Data Privacy & Zero-Knowledge</span>
+              <span class="skill-tag">🚀 Zero-Server Architecture</span>
+              <span class="skill-tag">☁️ Render Cloud Signaling</span>
+              <span class="skill-tag">🔒 End-to-End Privacy</span>
             </div>
           </div>
 
@@ -317,9 +336,9 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
                 LinkedIn
               </a>
-              <a id="linkWebsite" href="https://render.com" target="_blank" rel="noopener noreferrer" class="social-btn">
+              <a id="linkWebsite" href="https://github.com/arya30062003" target="_blank" rel="noopener noreferrer" class="social-btn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                Live Render
+                Website
               </a>
               <a id="linkEmail" href="mailto:developer@example.com" class="social-btn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -343,22 +362,17 @@
   <dialog id="qrModal" class="modal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>Connect Mobile Device</h3>
+        <h3>Connect Another Device</h3>
         <button id="closeQrModal" class="close-btn">&times;</button>
       </div>
 
       <div class="modal-body">
         <p class="modal-desc">
-          Scan this QR code with your mobile camera to open FlashDrop on your phone:
+          Scan with your phone to join this direct P2P exchange room:
         </p>
 
         <div class="qr-container">
           <div id="qrCodeWrapper" class="qr-code"></div>
-        </div>
-
-        <div class="network-select-group">
-          <label for="networkSelect">Available Network Access:</label>
-          <select id="networkSelect" class="form-select"></select>
         </div>
 
         <div class="url-copy-box">
@@ -368,7 +382,7 @@
 
         <div class="tip-box">
           <span class="tip-icon">💡</span>
-          <span>Ensure both devices are on the same Wi-Fi or hotspot. When deployed on Render, this QR code opens your public cloud address!</span>
+          <span>Open this link on both phones or PC. Once both are open, they immediately discover each other on the radar and exchange files directly over Wi-Fi!</span>
         </div>
       </div>
     </div>
@@ -397,6 +411,25 @@
     </div>
   </dialog>
 
+  <!-- Rename Device Modal -->
+  <dialog id="renameModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Choose Your Device Name</h3>
+        <button id="closeRenameModal" class="close-btn">&times;</button>
+      </div>
+      <form id="renameForm" class="modal-body">
+        <div class="form-group">
+          <label for="deviceNameInput">Device Name</label>
+          <input type="text" id="deviceNameInput" class="form-input" required placeholder="e.g. Arya's Phone">
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Save Name</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
   <!-- Edit Profile Modal -->
   <dialog id="editProfileModal" class="modal">
     <div class="modal-box">
@@ -407,7 +440,7 @@
       <form id="editProfileForm" class="modal-body">
         <div class="form-group">
           <label for="inputProfileName">Your Name / Handle</label>
-          <input type="text" id="inputProfileName" class="form-input" required placeholder="e.g. Kewte">
+          <input type="text" id="inputProfileName" class="form-input" required placeholder="e.g. Arya">
         </div>
         <div class="form-group">
           <label for="inputProfileTitle">Professional Title</label>
@@ -419,26 +452,16 @@
         </div>
         <div class="form-group">
           <label for="inputProfileSkills">Skills (comma-separated)</label>
-          <input type="text" id="inputProfileSkills" class="form-input" placeholder="Node.js, P2P Protocols, PWA, Render Cloud">
+          <input type="text" id="inputProfileSkills" class="form-input" placeholder="WebRTC P2P, Direct Wi-Fi, Node.js Core, Render Cloud">
         </div>
         <div class="form-row">
           <div class="form-group">
             <label for="inputProfileGithub">GitHub URL</label>
-            <input type="url" id="inputProfileGithub" class="form-input" placeholder="https://github.com/yourhandle">
+            <input type="url" id="inputProfileGithub" class="form-input" placeholder="https://github.com/arya30062003">
           </div>
           <div class="form-group">
             <label for="inputProfileLinkedin">LinkedIn URL</label>
-            <input type="url" id="inputProfileLinkedin" class="form-input" placeholder="https://linkedin.com/in/yourhandle">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="inputProfileWebsite">Website / Render URL</label>
-            <input type="url" id="inputProfileWebsite" class="form-input" placeholder="https://your-portfolio.com">
-          </div>
-          <div class="form-group">
-            <label for="inputProfileEmail">Contact Email</label>
-            <input type="email" id="inputProfileEmail" class="form-input" placeholder="you@example.com">
+            <input type="url" id="inputProfileLinkedin" class="form-input" placeholder="https://linkedin.com">
           </div>
         </div>
         <div class="modal-actions">
@@ -446,6 +469,31 @@
           <button type="submit" class="btn btn-primary">Save Profile</button>
         </div>
       </form>
+    </div>
+  </dialog>
+
+  <!-- Incoming File Transfer Prompt Modal -->
+  <dialog id="incomingModal" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Incoming P2P Transfer</h3>
+      </div>
+      <div class="modal-body">
+        <p id="incomingDesc" class="modal-desc">
+          <strong>Device</strong> wants to send you a file:
+        </p>
+        <div class="incoming-file-card">
+          <div class="file-icon" id="incomingFileIcon">🎬</div>
+          <div>
+            <div id="incomingFileName" style="font-weight:700;color:#fff;">movie.mp4</div>
+            <div id="incomingFileSize" style="font-size:13px;color:var(--text-muted);">0 MB</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="rejectTransferBtn" class="btn btn-danger">Decline</button>
+          <button id="acceptTransferBtn" class="btn btn-primary">Accept & Stream</button>
+        </div>
+      </div>
     </div>
   </dialog>
 

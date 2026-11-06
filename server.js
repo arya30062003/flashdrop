@@ -1,6 +1,5 @@
-// FlashDrop - Ultra-Fast Peer-to-Peer Local Network File Transfer
-// Clean-room, high-performance streaming architecture using native Node.js
-// Optimized for both local Wi-Fi / Hotspot and Cloud deployment (Render)
+// FlashDrop - True Peer-to-Peer (WebRTC Direct) & High-Speed Local File Transfer
+// Signaling Server & Static Host (0 bytes of file data pass through server in P2P mode)
 
 const http = require('http');
 const fs = require('fs');
@@ -13,14 +12,17 @@ const STORAGE_DIR = path.join(__dirname, 'received_files');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PROFILE_FILE = path.join(__dirname, 'developer_profile.json');
 
-// Ensure storage directory exists
 if (!fs.existsSync(STORAGE_DIR)) {
   fs.mkdirSync(STORAGE_DIR, { recursive: true });
 }
 
-// Global event bus for real-time SSE broadcasts
+// Global event bus
 const eventBus = new EventEmitter();
-const sseClients = new Set();
+const sseClients = new Map(); // peerId -> res
+
+// Active P2P Peers & Signaling Queues
+const activePeers = new Map(); // peerId -> { id, name, type, ip, lastSeen, roomId }
+const signalQueues = new Map(); // peerId -> Array<signalMessage>
 
 // Standalone QR Code Generator
 class QRGen {
@@ -92,7 +94,7 @@ class QRGen {
       for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
     };
 
-    pushBits(4, 4); // Byte mode
+    pushBits(4, 4);
     pushBits(utf8.length, 8);
     for (let b of utf8) pushBits(b, 8);
     const maxDataBits = vInfo.dataCw * 8;
@@ -239,65 +241,55 @@ class QRGen {
 
 const qrGen = new QRGen();
 
-// Get local network IPs (Wi-Fi, Hotspot, Ethernet)
+// Clean up stale peers every 15s
+setInterval(() => {
+  const now = Date.now();
+  for (const [peerId, peer] of activePeers.entries()) {
+    if (now - peer.lastSeen > 30000) {
+      activePeers.delete(peerId);
+      signalQueues.delete(peerId);
+      broadcastPeerList(peer.roomId);
+    }
+  }
+}, 15000);
+
 function getLocalIPs() {
   const interfaces = os.networkInterfaces();
   const ips = [];
   for (const name of Object.keys(interfaces)) {
     for (const net of interfaces[name]) {
       if (net.family === 'IPv4' && !net.internal) {
-        ips.push({
-          interface: name,
-          ip: net.address
-        });
+        ips.push({ interface: name, ip: net.address });
       }
     }
   }
   return ips;
 }
 
-// Broadcast event to all SSE clients
-function broadcastEvent(type, data) {
-  const payload = `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;
-  for (const client of sseClients) {
-    try {
-      client.write(payload);
-    } catch (e) {
-      sseClients.delete(client);
+function broadcastPeerList(roomId) {
+  const peersInRoom = Array.from(activePeers.values())
+    .filter(p => p.roomId === roomId)
+    .map(p => ({ id: p.id, name: p.name, type: p.type, os: p.os }));
+
+  for (const peer of activePeers.values()) {
+    if (peer.roomId === roomId && sseClients.has(peer.id)) {
+      sendSSE(sseClients.get(peer.id), 'peers-updated', peersInRoom);
     }
   }
 }
 
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+function sendSSE(res, event, data) {
+  try {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  } catch (e) {}
 }
 
-function getUniqueFilename(dir, originalName) {
-  let name = path.basename(originalName).replace(/[^\w\s\.-]/gi, '_');
-  let targetPath = path.join(dir, name);
-  let counter = 1;
-  const ext = path.extname(name);
-  const base = path.basename(name, ext);
-
-  while (fs.existsSync(targetPath)) {
-    name = `${base}_${counter}${ext}`;
-    targetPath = path.join(dir, name);
-    counter++;
-  }
-  return { filename: name, fullPath: targetPath };
-}
-
-// Default Developer Portfolio Profile
 const DEFAULT_PROFILE = {
   name: "Arya",
   title: "Full Stack & Systems Developer",
-  bio: "Creator of FlashDrop. Passionate about high-speed P2P networking, distributed applications, and modern cross-platform engineering.",
+  bio: "Creator of FlashDrop. Passionate about true peer-to-peer data exchange, WebRTC direct streaming, and high-performance cross-platform networking.",
   photoUrl: "https://github.com/arya30062003.png",
-  skills: ["Node.js", "P2P Protocols", "PWA", "Real-Time Streaming", "Render Cloud"],
+  skills: ["WebRTC P2P", "Direct Socket Streaming", "Node.js Core", "PWA", "Render Cloud"],
   github: "https://github.com/arya30062003",
   linkedin: "https://linkedin.com",
   website: "https://github.com/arya30062003",
@@ -322,7 +314,6 @@ function saveProfile(data) {
   }
 }
 
-// MIME types lookup
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -341,7 +332,6 @@ const MIME_TYPES = {
   '.zip': 'application/zip'
 };
 
-// Create High-Performance HTTP Server
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
@@ -358,7 +348,6 @@ const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = decodeURIComponent(parsedUrl.pathname);
 
-  // Detect Render / Cloud environment
   const isRender = Boolean(process.env.RENDER || process.env.RENDER_EXTERNAL_URL);
   const proto = req.headers['x-forwarded-proto'] || 'http';
   const host = req.headers['x-forwarded-host'] || req.headers.host || `localhost:${PORT}`;
@@ -370,8 +359,6 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/info' && req.method === 'GET') {
     const ips = getLocalIPs();
     const primaryIp = ips[0] ? ips[0].ip : '127.0.0.1';
-    
-    // In cloud/Render, prioritize external URL; locally, prioritize Wi-Fi IP
     const url = isRender ? externalUrl : `http://${primaryIp}:${PORT}`;
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -389,7 +376,123 @@ const server = http.createServer((req, res) => {
   }
 
   // ----------------------------------------------------
-  // 2. API: Developer Portfolio Profile
+  // 2. API: WebRTC P2P Signaling (Zero-File-Data Exchange)
+  // ----------------------------------------------------
+  // Register peer
+  if (pathname === '/api/p2p/join' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { peerId, name, type, roomId } = JSON.parse(body);
+        const room = roomId || 'default-room';
+        const clientIp = req.socket.remoteAddress;
+
+        activePeers.set(peerId, {
+          id: peerId,
+          name: name || `Device-${peerId.slice(-4)}`,
+          type: type || 'mobile',
+          ip: clientIp,
+          lastSeen: Date.now(),
+          roomId: room
+        });
+
+        if (!signalQueues.has(peerId)) {
+          signalQueues.set(peerId, []);
+        }
+
+        broadcastPeerList(room);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, peerId, roomId: room }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
+    return;
+  }
+
+  // Send WebRTC Signal (Offer, Answer, ICE Candidate) to Target Peer
+  if (pathname === '/api/p2p/signal' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { from, to, signal } = JSON.parse(body);
+        if (!to || !signal) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Missing to or signal' }));
+          return;
+        }
+
+        const msg = { from, signal, time: Date.now() };
+
+        // If target peer has active SSE connection, push immediately
+        if (sseClients.has(to)) {
+          sendSSE(sseClients.get(to), 'p2p-signal', msg);
+        } else {
+          // Otherwise queue it
+          const queue = signalQueues.get(to) || [];
+          queue.push(msg);
+          signalQueues.set(to, queue);
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+
+  // SSE Channel for P2P Signaling & Peer Presence
+  if (pathname === '/api/p2p/events' && req.method === 'GET') {
+    const peerId = parsedUrl.searchParams.get('peerId');
+    if (!peerId) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      res.end('Missing peerId');
+      return;
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive'
+    });
+
+    sseClients.set(peerId, res);
+    sendSSE(res, 'connected', { peerId });
+
+    // Flush any pending signals in queue
+    const queue = signalQueues.get(peerId) || [];
+    while (queue.length > 0) {
+      const sig = queue.shift();
+      sendSSE(res, 'p2p-signal', sig);
+    }
+
+    // Keep peer alive
+    const peer = activePeers.get(peerId);
+    if (peer) {
+      peer.lastSeen = Date.now();
+      broadcastPeerList(peer.roomId);
+    }
+
+    req.on('close', () => {
+      sseClients.delete(peerId);
+      const p = activePeers.get(peerId);
+      if (p) {
+        activePeers.delete(peerId);
+        broadcastPeerList(p.roomId);
+      }
+    });
+    return;
+  }
+
+  // ----------------------------------------------------
+  // 3. API: Developer Portfolio Profile
   // ----------------------------------------------------
   if (pathname === '/api/profile' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -406,7 +509,6 @@ const server = http.createServer((req, res) => {
         const current = getProfile();
         const merged = { ...current, ...update };
         saveProfile(merged);
-        broadcastEvent('profile-updated', merged);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, profile: merged }));
       } catch (e) {
@@ -418,7 +520,7 @@ const server = http.createServer((req, res) => {
   }
 
   // ----------------------------------------------------
-  // 3. API: Dynamic Offline QR Code (SVG)
+  // 4. API: Dynamic Offline QR Code (SVG)
   // ----------------------------------------------------
   if (pathname === '/api/qr.svg' && req.method === 'GET') {
     const defaultUrl = isRender ? externalUrl : `http://${getLocalIPs()[0]?.ip || '127.0.0.1'}:${PORT}`;
@@ -433,221 +535,7 @@ const server = http.createServer((req, res) => {
   }
 
   // ----------------------------------------------------
-  // 4. API: High-Speed Upload Endpoint
-  // ----------------------------------------------------
-  if (pathname === '/api/upload' && req.method === 'POST') {
-    const rawFilename = req.headers['x-filename'] || parsedUrl.searchParams.get('filename') || `file_${Date.now()}`;
-    const cleanFilename = decodeURIComponent(rawFilename);
-    const totalSize = parseInt(req.headers['x-file-size'] || parsedUrl.searchParams.get('size') || '0', 10);
-    const transferId = req.headers['x-transfer-id'] || `t_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-
-    const { filename, fullPath } = getUniqueFilename(STORAGE_DIR, cleanFilename);
-    const writeStream = fs.createWriteStream(fullPath, { highWaterMark: 1024 * 1024 });
-
-    let bytesReceived = 0;
-    let lastTime = Date.now();
-    let lastBytes = 0;
-    let currentSpeedMBps = 0;
-
-    broadcastEvent('transfer-start', {
-      transferId,
-      filename,
-      totalSize,
-      formattedSize: formatBytes(totalSize)
-    });
-
-    req.on('data', (chunk) => {
-      bytesReceived += chunk.length;
-      const now = Date.now();
-      const elapsed = (now - lastTime) / 1000;
-
-      if (elapsed >= 0.25) {
-        const bytesDiff = bytesReceived - lastBytes;
-        currentSpeedMBps = parseFloat(((bytesDiff / elapsed) / (1024 * 1024)).toFixed(2));
-        lastTime = now;
-        lastBytes = bytesReceived;
-
-        broadcastEvent('transfer-progress', {
-          transferId,
-          bytesReceived,
-          totalSize,
-          percent: totalSize > 0 ? Math.min(100, Math.round((bytesReceived / totalSize) * 100)) : 0,
-          speedMBps: currentSpeedMBps
-        });
-      }
-    });
-
-    req.pipe(writeStream);
-
-    writeStream.on('finish', () => {
-      const stats = fs.statSync(fullPath);
-      broadcastEvent('transfer-complete', {
-        transferId,
-        filename,
-        size: stats.size,
-        formattedSize: formatBytes(stats.size),
-        downloadUrl: `/api/download/${encodeURIComponent(filename)}`
-      });
-
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        success: true,
-        filename,
-        size: stats.size,
-        formattedSize: formatBytes(stats.size)
-      }));
-    });
-
-    req.on('error', (err) => {
-      console.error('Upload stream error:', err);
-      try { fs.unlinkSync(fullPath); } catch (_) {}
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: err.message }));
-    });
-
-    writeStream.on('error', (err) => {
-      console.error('Write stream error:', err);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: err.message }));
-    });
-
-    return;
-  }
-
-  // ----------------------------------------------------
-  // 5. API: List Received Files
-  // ----------------------------------------------------
-  if (pathname === '/api/files' && req.method === 'GET') {
-    fs.readdir(STORAGE_DIR, (err, files) => {
-      if (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
-        return;
-      }
-
-      const fileList = files
-        .map(file => {
-          try {
-            const stats = fs.statSync(path.join(STORAGE_DIR, file));
-            const ext = path.extname(file).toLowerCase();
-            return {
-              name: file,
-              size: stats.size,
-              formattedSize: formatBytes(stats.size),
-              modified: stats.mtime,
-              ext,
-              downloadUrl: `/api/download/${encodeURIComponent(file)}`
-            };
-          } catch (e) {
-            return null;
-          }
-        })
-        .filter(Boolean)
-        .sort((a, b) => b.modified - a.modified);
-
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(fileList));
-    });
-    return;
-  }
-
-  // ----------------------------------------------------
-  // 6. API: High-Speed Download (Supports Range / Resuming)
-  // ----------------------------------------------------
-  if (pathname.startsWith('/api/download/') && req.method === 'GET') {
-    const filename = decodeURIComponent(pathname.replace('/api/download/', ''));
-    const safePath = path.normalize(path.join(STORAGE_DIR, filename));
-
-    if (!safePath.startsWith(STORAGE_DIR) || !fs.existsSync(safePath)) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('File Not Found');
-      return;
-    }
-
-    const stat = fs.statSync(safePath);
-    const fileSize = stat.size;
-    const ext = path.extname(safePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-
-    const range = req.headers.range;
-    if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-      const chunksize = (end - start) + 1;
-
-      res.writeHead(206, {
-        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': chunksize,
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
-        'Cache-Control': 'no-cache'
-      });
-
-      const fileStream = fs.createReadStream(safePath, { start, end, highWaterMark: 1024 * 1024 });
-      fileStream.pipe(res);
-    } else {
-      res.writeHead(200, {
-        'Content-Length': fileSize,
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
-        'Accept-Ranges': 'bytes',
-        'Cache-Control': 'no-cache'
-      });
-
-      const fileStream = fs.createReadStream(safePath, { highWaterMark: 1024 * 1024 });
-      fileStream.pipe(res);
-    }
-    return;
-  }
-
-  // ----------------------------------------------------
-  // 7. API: Delete File
-  // ----------------------------------------------------
-  if (pathname.startsWith('/api/files/') && req.method === 'DELETE') {
-    const filename = decodeURIComponent(pathname.replace('/api/files/', ''));
-    const safePath = path.normalize(path.join(STORAGE_DIR, filename));
-
-    if (!safePath.startsWith(STORAGE_DIR) || !fs.existsSync(safePath)) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'File not found' }));
-      return;
-    }
-
-    try {
-      fs.unlinkSync(safePath);
-      broadcastEvent('file-deleted', { filename });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, filename }));
-    } catch (e) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: e.message }));
-    }
-    return;
-  }
-
-  // ----------------------------------------------------
-  // 8. API: Real-Time Server-Sent Events (SSE)
-  // ----------------------------------------------------
-  if (pathname === '/api/events' && req.method === 'GET') {
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive'
-    });
-
-    res.write('event: connected\ndata: {"status":"connected"}\n\n');
-    sseClients.add(res);
-
-    req.on('close', () => {
-      sseClients.delete(res);
-    });
-    return;
-  }
-
-  // ----------------------------------------------------
-  // 9. Static Web App & PWA Files
+  // 5. Static Web App & PWA Files
   // ----------------------------------------------------
   let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
   const safeStaticPath = path.normalize(filePath);
@@ -686,14 +574,14 @@ const server = http.createServer((req, res) => {
   });
 });
 
-// Start Server
 server.listen(PORT, '0.0.0.0', () => {
   const ips = getLocalIPs();
   const primaryIp = ips[0] ? ips[0].ip : '127.0.0.1';
   const accessUrl = process.env.RENDER_EXTERNAL_URL || `http://${primaryIp}:${PORT}`;
 
   console.log('\n=============================================================');
-  console.log('   ⚡ FlashDrop - Ultra-Fast Local File Transfer (Running)  ');
+  console.log('   ⚡ FlashDrop - True WebRTC Direct P2P File Transfer      ');
+  console.log('   🔒 0 BYTES OF FILE DATA ARE UPLOADED TO THE SERVER       ');
   if (process.env.RENDER) {
     console.log('   🌐 Deployed on Render Cloud: ' + accessUrl);
   }
@@ -712,6 +600,6 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('  (QR ASCII display skipped: ' + e.message + ')');
   }
 
-  console.log('\n  Ready! Connect phone to same Wi-Fi/Hotspot and open link.');
-  console.log('  Transfers stream directly device-to-device at full Wi-Fi speed.\n');
+  console.log('\n  Ready! Connect devices on same Wi-Fi or scan QR.');
+  console.log('  Devices exchange files directly over local Wi-Fi radios.\n');
 });
