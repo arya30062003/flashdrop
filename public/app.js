@@ -32,6 +32,9 @@ const RTC_CONFIG = {
 // DOM Elements
 const heroSendBtn = document.getElementById('heroSendBtn');
 const heroReceiveBtn = document.getElementById('heroReceiveBtn');
+const scanCameraQuickBtn = document.getElementById('scanCameraQuickBtn');
+const scanBluetoothBtn = document.getElementById('scanBluetoothBtn');
+const showMyQrBtn = document.getElementById('showMyQrBtn');
 let pendingFilesToSend = [];
 
 const splashScreen = document.getElementById('splashScreen');
@@ -543,7 +546,7 @@ function updatePeerCardStatus(peerId, statusText) {
 }
 
 // ----------------------------------------------------
-// 7. File Selection / Drag & Drop
+// 7. File Selection / Drag & Drop & Quick Discovery
 // ----------------------------------------------------
 if (heroSendBtn) {
   heroSendBtn.addEventListener('click', () => {
@@ -556,6 +559,60 @@ if (heroReceiveBtn) {
     initQR();
     qrModal.showModal();
   });
+}
+
+if (showMyQrBtn) {
+  showMyQrBtn.addEventListener('click', () => {
+    initQR();
+    qrModal.showModal();
+  });
+}
+
+if (scanCameraQuickBtn) {
+  scanCameraQuickBtn.addEventListener('click', () => {
+    scanBtn.click();
+  });
+}
+
+// Bluetooth Nearby Device Scanner (Web Bluetooth API)
+if (scanBluetoothBtn) {
+  scanBluetoothBtn.addEventListener('click', scanBluetoothDevices);
+}
+
+async function scanBluetoothDevices() {
+  if (!navigator.bluetooth) {
+    alert('Bluetooth scanning is supported on Google Chrome, Edge, and Opera (on Android, Windows, and Mac). You can also use the Camera QR Scanner!');
+    return;
+  }
+
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true
+    });
+
+    if (device) {
+      const bName = device.name || 'Bluetooth Device';
+      const bId = 'bt_' + (device.id ? device.id.slice(0, 8) : Math.random().toString(36).substring(2, 7));
+
+      // Add to nearby peers radar
+      const existing = nearbyPeers.find(p => p.id === bId || p.name === bName);
+      if (!existing) {
+        nearbyPeers.push({
+          id: bId,
+          name: bName,
+          type: 'mobile',
+          os: 'Bluetooth'
+        });
+        renderNearbyPeers();
+      }
+
+      selectPeer(bId);
+    }
+  } catch (err) {
+    if (err.name !== 'NotFoundError') {
+      console.warn('Bluetooth scan:', err.message);
+    }
+  }
 }
 
 fileInput.addEventListener('change', (e) => {
@@ -703,6 +760,19 @@ scanBtn.addEventListener('click', async () => {
             if (val.startsWith('http')) {
               stream.getTracks().forEach(t => t.stop());
               scannerModal.close();
+
+              // Smart peer pairing without page reload if on same app
+              try {
+                const scannedUrl = new URL(val);
+                const scannedPeer = scannedUrl.searchParams.get('peer');
+                if (scannedPeer && scannedPeer !== myPeerId) {
+                  if (navigator.vibrate) navigator.vibrate(100);
+                  initiatePeerConnection(scannedPeer);
+                  selectPeer(scannedPeer);
+                  return;
+                }
+              } catch (e) {}
+
               window.location.href = val;
               return;
             }

@@ -204,6 +204,37 @@
         </button>
       </div>
 
+      <!-- Quick Discovery Options (QR Scanner & Bluetooth) -->
+      <div class="discovery-toolbar">
+        <button id="scanCameraQuickBtn" class="discovery-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 8V5a1 1 0 0 1 1-1h3"/>
+            <path d="M16 4h3a1 1 0 0 1 1 1v3"/>
+            <path d="M4 16v3a1 1 0 0 0 1 1h3"/>
+            <path d="M16 20h3a1 1 0 0 0 1-1v-3"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span>📷 Scan QR Code</span>
+        </button>
+
+        <button id="scanBluetoothBtn" class="discovery-btn bluetooth-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/>
+          </svg>
+          <span>🔵 Scan Bluetooth</span>
+        </button>
+
+        <button id="showMyQrBtn" class="discovery-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <path d="M14 14h3v3h-3z"/>
+          </svg>
+          <span>📱 Show My QR</span>
+        </button>
+      </div>
+
       <!-- Radar Section -->
       <div class="radar-card card">
         <div class="radar-header">
